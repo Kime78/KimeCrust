@@ -1,5 +1,6 @@
 mod shaders;
 mod draw;
+mod texture;
 
 extern crate glfw;
 extern crate gl;
@@ -8,6 +9,7 @@ use glfw::*;
 use glm::Vec2;
 use shaders::*;
 use draw::*;
+use texture::Texture2D;
 //use gl::types::*;
 
 fn main() {
@@ -23,6 +25,7 @@ fn main() {
     
     window.set_key_polling(true);
     window.make_current();
+    let text = Texture2D::new("/home/kime/Documents/projects/KimeCrust/res/grass.png");
     let vert_src = include_str!("triangle.vs").to_string();
     let frag_src = include_str!("triangle.fs").to_string();
     let vert = Shader::new(vert_src, ShaderType::Vertex);
@@ -37,6 +40,7 @@ fn main() {
     while !window.should_close() {
         window.swap_buffers();
         prog.use_program();
+        text.bind();
         d.draw();
         glfw.poll_events();
         for (_, event) in glfw::flush_messages(&events) {

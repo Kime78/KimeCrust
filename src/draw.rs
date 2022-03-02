@@ -1,4 +1,5 @@
 use std::{mem::{size_of, self}, ffi::c_void};
+use std::fs::File;
 
 pub struct DrawEngine { //idk how tf to call this
     vao: u32,
@@ -7,30 +8,76 @@ pub struct DrawEngine { //idk how tf to call this
 }
 impl DrawEngine {
     pub fn new() -> Self {
-        let vertices: [f32; 60] = [
-            // positions         // colors
-            -0.4,   0.125,  0.0,  0.4, 0.521, 0.960, 
-            -0.125, 0.125,  0.0,  0.490, 0.443, 0.956,
-             0.0,   0.5,    0.0,  0.686, 0.443, 0.956, 
-             0.125, 0.125,  0.0,  0.917, 0.443, 0.956,  
-             0.4,   0.125,  0.0,  0.807, 0.317, 0.250,  
-             0.13, -0.125,  0.0,  0.807, 0.250, 0.682,
-             0.29, -0.6,    0.0,  0.956, 0.631, 0.443,
-             0.0,  -0.29,   0.0,  0.956, 0.843, 0.443,
-            -0.29, -0.6,    0.0,  0.862, 0.956, 0.443,
-            -0.13, -0.125,  0.0,  0.584, 0.956, 0.443
+        let vertices: [f32; 180] = [
+            // positions       // texture coords
+            -0.5, -0.5, -0.5,  0.0, 0.0,
+            0.5, -0.5, -0.5,   1.0, 0.0,
+            0.5,  0.5, -0.5,   1.0, 1.0,
+            0.5,  0.5, -0.5,   1.0, 1.0,
+            -0.5,  0.5, -0.5,  0.0, 1.0,
+            -0.5, -0.5, -0.5,  0.0, 0.0,
+
+            -0.5, -0.5,  0.5,  0.0, 0.0,
+            0.5, -0.5,  0.5,   1.0, 0.0,
+            0.5,  0.5,  0.5,   1.0, 1.0,
+            0.5,  0.5,  0.5,   1.0, 1.0,
+            -0.5,  0.5,  0.5,  0.0, 1.0,
+            -0.5, -0.5,  0.5,  0.0, 0.0,
+
+            -0.5,  0.5,  0.5,  1.0, 0.0,
+            -0.5,  0.5, -0.5,  1.0, 1.0,
+            -0.5, -0.5, -0.5,  0.0, 1.0,
+            -0.5, -0.5, -0.5,  0.0, 1.0,
+            -0.5, -0.5,  0.5,  0.0, 0.0,
+            -0.5,  0.5,  0.5,  1.0, 0.0,
+
+            0.5,  0.5,  0.5,   1.0, 0.0,
+            0.5,  0.5, -0.5,   1.0, 1.0,
+            0.5, -0.5, -0.5,   0.0, 1.0,
+            0.5, -0.5, -0.5,   0.0, 1.0,
+            0.5, -0.5,  0.5,   0.0, 0.0,
+            0.5,  0.5,  0.5,   1.0, 0.0,
+
+            -0.5, -0.5, -0.5,  0.0, 1.0,
+            0.5, -0.5, -0.5,  1.0, 1.0,
+            0.5, -0.5,  0.5,  1.0, 0.0,
+            0.5, -0.5,  0.5,  1.0, 0.0,
+            -0.5, -0.5,  0.5,  0.0, 0.0,
+            -0.5, -0.5, -0.5,  0.0, 1.0,
+
+            -0.5,  0.5, -0.5,  0.0, 1.0,
+            0.5,  0.5, -0.5,  1.0, 1.0,
+            0.5,  0.5,  0.5,  1.0, 0.0,
+            0.5,  0.5,  0.5,  1.0, 0.0,
+            -0.5,  0.5,  0.5,  0.0, 0.0,
+            -0.5,  0.5, -0.5,  0.0, 1.0
         ];
 
-        let elements: [u32; 24] = [
-            0, 1, 9,   1, 2, 3,
-            3, 4, 5,   5, 6, 7,
-            7, 8, 9,   9, 5, 7,
-            9, 1, 3,   9, 3, 5
-        ];
+        // let elements: [u32; 36] = [
+        //     /*Above ABC,BCD*/
+        //     0,1,2,
+        //     1,2,3,
+    
+        //     /*Following EFG,FGH*/
+        //     4,5,6,
+        //     5,6,7,
+        //     /*Left ABF,AEF*/
+        //     0,1,5,
+        //     0,4,5,
+        //     /*Right side CDH,CGH*/
+        //     2,3,7,
+        //     2,6,7,
+        //     /*ACG,AEG*/
+        //     0,2,6,
+        //     0,4,6,
+        //     /*Behind BFH,BDH*/
+        //     1,5,7,
+        //     1,3,7
+        // ];
 
         let mut VBO: u32 = 0;
         let mut VAO: u32 = 0;
-        let mut EBO: u32 = 0;
+        //let mut EBO: u32 = 0;
 
         unsafe {
             gl::GenVertexArrays(1, &mut VAO);
@@ -46,26 +93,29 @@ impl DrawEngine {
 
             gl::BufferData(gl::ARRAY_BUFFER, (vertices.len() * size_of::<f32>()) as isize, dat, gl::STATIC_DRAW);
 
-            gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, 6 * mem::size_of::<f32>() as i32, 0 as *const c_void);
+            gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, 5 * mem::size_of::<f32>() as i32, 0 as *const c_void);
             gl::EnableVertexAttribArray(0);
 
-            gl::VertexAttribPointer(1, 3, gl::FLOAT, gl::FALSE, 6 * mem::size_of::<f32>() as i32, (3 * mem::size_of::<f32>()) as *const c_void);
-            gl::EnableVertexAttribArray(1);
+            // gl::VertexAttribPointer(1, 3, gl::FLOAT, gl::FALSE, 5 * mem::size_of::<f32>() as i32, (3 * mem::size_of::<f32>()) as *const c_void);
+            // gl::EnableVertexAttribArray(1);
 
-            let asd = &elements;
-            let p = asd as *const u32;
-            let dat = p as *const c_void;
+            gl::VertexAttribPointer(1, 2, gl::FLOAT, gl::FALSE, 5 * mem::size_of::<f32>() as i32, (3 * mem::size_of::<f32>()) as *const c_void);
+            gl::EnableVertexAttribArray(1); 
 
-            gl::GenBuffers(1, &mut EBO);
-	        gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, EBO);
-	        gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, (elements.len() * size_of::<u32>()) as isize, dat, gl::STATIC_DRAW);
+            //let asd = &elements;
+            //let p = asd as *const u32;
+            //let dat = p as *const c_void;
+
+            // gl::GenBuffers(1, &mut EBO);
+	        // gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, EBO);
+	        // gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, (elements.len() * size_of::<u32>()) as isize, dat, gl::STATIC_DRAW);
         }   
 
         Self {
             vao: VAO,
             vbo: VBO,
             wireframe: false
-        }
+        }   
     }
 
     pub fn draw(&self) {
@@ -81,7 +131,7 @@ impl DrawEngine {
             gl::Clear(gl::COLOR_BUFFER_BIT);
 
             gl::BindVertexArray(self.vao);
-            gl::DrawElements(gl::TRIANGLES, 24, gl::UNSIGNED_INT, 0 as *const c_void);
+            gl::DrawArrays(gl::TRIANGLES, 0, 36);
         }
     }
     pub fn change_wireframe(&mut self) {
