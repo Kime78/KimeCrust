@@ -21,7 +21,7 @@ impl Texture2D {
             //let mut file = File::open("/home/kime/Documents/projects/KimeCrust/res/grass.png").unwrap();
             //let mut img = stb::image::stbi_load_from_reader(&mut file, stb::image::Channels::Rgb).unwrap().1.as_slice();
             
-            let img = ImageReader::open("/home/kime/Documents/projects/KimeCrust/res/grass.png").unwrap().decode().unwrap();
+            let img = ImageReader::open(path).unwrap().decode().unwrap();
             let byt = img.as_rgb8().unwrap().as_ptr() as *const c_void;
             
             gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGB as i32, 32, 32, 0, gl::RGB, gl::UNSIGNED_BYTE, byt);

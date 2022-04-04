@@ -25,19 +25,59 @@ fn main() {
     
     window.set_key_polling(true);
     window.make_current();
-    let text = Texture2D::new("/home/kime/Documents/projects/KimeCrust/res/grass.png");
-    let vert_src = include_str!("triangle.vs").to_string();
-    let frag_src = include_str!("triangle.fs").to_string();
+    let test = include_bytes!("../res/grass.png");
+    let text = Texture2D::new("/home/kime/Documents/Projects/KimeCrust/res/grass.png");
+    let mut vert_src = include_str!("triangle.vs").to_string();
+    let mut frag_src = include_str!("triangle.fs").to_string();
     let vert = Shader::new(vert_src, ShaderType::Vertex);
     let frag = Shader::new(frag_src, ShaderType::Fragment);
 
+    let mut model = glm::mat4(
+        1.0,0.0,0.0,0.0,
+        0.0,1.0,0.0,0.0,
+        0.0,0.0,1.0,0.0,
+        0.0,0.0,0.0,1.0, 
+    );
+
+    //let m = &model;
+    
+    //model = glm::ext::rotate(mo, glm::radians(-55.0), glm::vec3(1.0, 0.0, 0.0));
+
+    let mut projection = glm::mat4(
+        1.0,0.0,0.0,0.0,
+        0.0,1.0,0.0,0.0,
+        0.0,0.0,1.0,0.0,
+        0.0,0.0,0.0,1.0, 
+    );
+
+    projection = glm::ext::perspective(glm::radians(45.0), 800.0 / 600.0, 0.1, 100.0);
+
+    let mut view = glm::mat4(
+        1.0,0.0,0.0,0.0,
+        0.0,1.0,0.0,0.0,
+        0.0,0.0,1.0,0.0,
+        0.0,0.0,0.0,1.0, 
+    );
+
+    let m = &view;
+    view = glm::ext::translate(m, glm::vec3(0.0, 0.0, -3.0)); 
+    
     let prog = ShaderProgram::new(vert, frag);
     let mut d = DrawEngine::new();
     unsafe { gl::Viewport(0, 0, 1024, 720); }
     let mut is_fullscreen = false;
     let mut last_pos = (0, 0);
     let mut last_size = (0, 0);
+
     while !window.should_close() {
+        let m = &model;
+        model = glm::ext::rotate(m, (glfw.get_time() * glm::radians(50.0)) as f32, glm::vec3(0.5, 1.0, 0.0));  
+
+        prog.upload_mat4(view, "view".to_string());
+        prog.upload_mat4(projection, "projection".to_string());
+        prog.upload_mat4(model, "model".to_string());
+
+        glfw.get_time();
         window.swap_buffers();
         prog.use_program();
         text.bind();

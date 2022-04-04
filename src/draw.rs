@@ -109,6 +109,7 @@ impl DrawEngine {
             // gl::GenBuffers(1, &mut EBO);
 	        // gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, EBO);
 	        // gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, (elements.len() * size_of::<u32>()) as isize, dat, gl::STATIC_DRAW);
+            gl::Enable(gl::DEPTH_TEST);
         }   
 
         Self {

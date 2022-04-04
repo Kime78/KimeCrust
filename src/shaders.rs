@@ -9,6 +9,7 @@ pub enum ShaderType {
     Fragment
 }
 
+#[derive(Debug)]
 pub struct Shader {
     id: GLuint
 }
@@ -19,7 +20,7 @@ pub struct ShaderProgram {
 }
 
 impl Shader {
-    pub fn new(src: String, typ: ShaderType) -> Self {
+    pub fn new(mut src: String, typ: ShaderType) -> Self {
         let mut shader_id :u32 = 0;
         
         if typ == ShaderType::Vertex {
@@ -31,7 +32,9 @@ impl Shader {
         else if shader_id == 0 {
             panic!("The type of shader is incorrect!");
         }
-        
+
+        src.push('\0');
+
         unsafe {
             let why = src.as_ptr() as *const GLchar;
             let just_why = &why as *const *const GLchar;
@@ -215,20 +218,49 @@ impl ShaderProgram {
     } 
     
     //TODO MATRIX BS
-    // pub fn upload_mat3(&self, matrix: Vec4, var: String) {
-    //     unsafe {
-    //         let location = gl::GetUniformLocation(self.id, var.as_ptr() as *const i8);
-    //         //gl::Uniform4f(location, vector.x, vector.y, vector.z, vector.w);
-    //     }
-    // }
+    pub fn upload_mat3(&self, matrix: Mat3, var: String) {
+        unsafe {
+            let location = gl::GetUniformLocation(self.id, var.as_ptr() as *const i8);
+            //gl::Uniform4f(location, vector.x, vector.y, vector.z, vector.w);
 
-    // pub fn upload_mat4(&self, matrix: Mat4, var: String) {
-    //     unsafe {
-    //         let location = gl::GetUniformLocation(self.id, var.as_ptr() as *const i8);
-    //         //gl::Uniform4f(location, vector.x, vector.y, vector.z, vector.w);
-    //         gl::UniformMatrix4fv(location, count, transpose, value)
-    //     }
-    // }
+            let test = matrix.as_array();
+            let mut mat: [f32; 9] = [0.0; 9];
+            let mut k = 0;
+
+            for e in test {
+                mat[k] = e.x;
+                mat[k + 1] = e.y;
+                mat[k + 2] = e.z;
+                k += 3;
+            }
+
+            let pmat = mat.as_ptr();
+            gl::UniformMatrix3fv(location, 1, 0, pmat);
+        }
+    }
+    
+    pub fn upload_mat4(&self, matrix: Mat4, var: String) {
+        unsafe {
+            let location = gl::GetUniformLocation(self.id, var.as_ptr() as *const i8);
+            //gl::Uniform4f(location, vector.x, vector.y, vector.z, vector.w);
+
+            let test = matrix.as_array();
+            let mut mat: [f32; 16] = [0.0; 16];
+            let mut k = 0;
+
+            for e in test {
+                mat[k] = e.x;
+                mat[k + 1] = e.y;
+                mat[k + 2] = e.z;
+                mat[k + 3] = e.w;
+                k += 4;
+            }
+
+            let pmat = mat.as_ptr();
+            println!("{pmat:?}");
+            gl::UniformMatrix3fv(location, 1, 0, pmat);
+        }
+    }
 
     pub fn use_program(&self) {
         unsafe {
